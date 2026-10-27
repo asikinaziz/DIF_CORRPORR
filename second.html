@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ringkasan Laporan PORR - Program DIB/DIF Sesi I 2025/2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
+        .chart-bar { transition: height 1.5s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.3s; cursor: pointer; }
+        .chart-bar:hover { opacity: 0.9; transform: scaleX(1.05); }
+        .active-bar { filter: brightness(1.1); box-shadow: 0 0 15px rgba(37, 99, 235, 0.3); }
+        .card-enter { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .metric-card { transition: all 0.3s ease; }
+        .metric-card:hover { transform: translateY(-4px); }
+        /* Grid background for chart */
+        .chart-grid {
+            background-image: linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+            background-size: 100% 20%; /* 5 lines */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 pb-20">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 px-6 py-4 flex justify-between items-center shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 p-2 rounded-lg text-white">
+                <i data-lucide="bar-chart-2" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-slate-800 leading-none text-lg" data-key="title">Ringkasan Laporan PORR</h1>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1" data-key="subtitle">Program DIB/DIF | Sesi I 2025/2026</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+             <button onclick="toggleLanguage()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-full transition-colors flex items-center gap-2">
+                <i data-lucide="globe" class="w-4 h-4"></i>
+                <span id="lang-btn-text">English</span>
+            </button>
+            <div class="hidden md:flex gap-6 text-xs font-bold uppercase tracking-wider text-slate-500">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-blue-500"></span> <span data-key="dif_label">DIF (Baharu)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-indigo-500"></span> <span data-key="dib_label">DIB (Lama)</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-6 lg:p-10 space-y-10">
+
+        <!-- Executive Summary -->
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm metric-card">
+                <p class="text-[10px] font-bold text-slate-400 uppercase" data-key="total_students">Jumlah Pelajar</p>
+                <p class="text-3xl font-black text-slate-800">95</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm metric-card">
+                <p class="text-[10px] font-bold text-slate-400 uppercase" data-key="avg_plo">Purata Skor PLO</p>
+                <p class="text-3xl font-black text-blue-600">82.3%</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm metric-card">
+                <p class="text-[10px] font-bold text-slate-400 uppercase" data-key="avg_pnm">Purata PNM > 3.00</p>
+                <p class="text-3xl font-black text-emerald-600">85%</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm metric-card">
+                <p class="text-[10px] font-bold text-slate-400 uppercase" data-key="fail_rate">Kadar Gagal</p>
+                <p class="text-3xl font-black text-red-500">3.15%</p>
+            </div>
+        </section>
+
+        <!-- Interactive Main Section -->
+        <div class="grid lg:grid-cols-12 gap-8">
+            
+            <!-- Left: Interactive Graph -->
+            <div class="lg:col-span-7 bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
+                <div class="mb-6 flex justify-between items-end">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-800" data-key="plo_attainment_title">Pencapaian PLO Mengikut Kelas</h2>
+                        <p class="text-xs text-slate-500 mt-1" data-key="plo_attainment_subtitle">Klik pada bar untuk melihat analisis prestasi akademik terperinci.</p>
+                    </div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase text-right">
+                        <span data-key="target">Sasaran</span>: 70%<br><span data-key="pass">Lulus</span>: 50%
+                    </div>
+                </div>
+
+                <!-- Chart Container with Grid -->
+                <div class="relative h-72 w-full pt-6">
+                    <!-- Y-Axis Labels -->
+                    <div class="absolute left-0 top-0 h-full flex flex-col justify-between text-[10px] text-slate-300 font-bold select-none py-6">
+                        <span>100%</span>
+                        <span>80%</span>
+                        <span>60%</span>
+                        <span>40%</span>
+                        <span>20%</span>
+                        <span>0%</span>
+                    </div>
+
+                    <!-- Bars Area -->
+                    <div class="ml-8 h-full flex items-end justify-around gap-2 border-b border-slate-200 chart-grid pb-0" id="chart-container">
+                        
+                        <!-- DIF1A (85%) -->
+                        <div class="group h-full flex flex-col justify-end items-center w-full cursor-pointer" onclick="showDetails('dif1a')">
+                            <div class="text-xs font-bold text-blue-600 mb-1 opacity-0 group-hover:opacity-100 transition-opacity -translate-y-2">85%</div>
+                            <div class="w-full max-w-[45px] bg-blue-500 rounded-t-lg chart-bar relative shadow-lg shadow-blue-500/20" style="height: 0%;" data-height="85%"></div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase mt-3 group-hover:text-blue-600">DIF1A</div>
+                        </div>
+
+                        <!-- DIF2A (83%) -->
+                        <div class="group h-full flex flex-col justify-end items-center w-full cursor-pointer" onclick="showDetails('dif2a')">
+                            <div class="text-xs font-bold text-blue-600 mb-1 opacity-0 group-hover:opacity-100 transition-opacity -translate-y-2">83%</div>
+                            <div class="w-full max-w-[45px] bg-blue-500 rounded-t-lg chart-bar relative shadow-lg shadow-blue-500/20" style="height: 0%;" data-height="83%"></div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase mt-3 group-hover:text-blue-600">DIF2A</div>
+                        </div>
+
+                        <!-- DIF3A (87%) -->
+                        <div class="group h-full flex flex-col justify-end items-center w-full cursor-pointer" onclick="showDetails('dif3a')">
+                            <div class="text-xs font-bold text-blue-600 mb-1 opacity-0 group-hover:opacity-100 transition-opacity -translate-y-2">87%</div>
+                            <div class="w-full max-w-[45px] bg-blue-500 rounded-t-lg chart-bar relative shadow-lg shadow-blue-500/20" style="height: 0%;" data-height="87%"></div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase mt-3 group-hover:text-blue-600">DIF3A</div>
+                        </div>
+
+                        <!-- DIF4A (72%) - WARNING -->
+                        <div class="group h-full flex flex-col justify-end items-center w-full cursor-pointer" onclick="showDetails('dif4a')">
+                            <div class="text-xs font-bold text-red-500 mb-1 opacity-100 -translate-y-2">72%</div>
+                            <div class="w-full max-w-[45px] bg-red-500 rounded-t-lg chart-bar relative shadow-lg shadow-red-500/20" style="height: 0%;" data-height="72%"></div>
+                            <div class="text-[10px] font-bold text-red-500 uppercase mt-3">DIF4A</div>
+                        </div>
+
+                        <!-- DIB5A (82%) -->
+                        <div class="group h-full flex flex-col justify-end items-center w-full cursor-pointer" onclick="showDetails('dib5a')">
+                            <div class="text-xs font-bold text-indigo-600 mb-1 opacity-0 group-hover:opacity-100 transition-opacity -translate-y-2">82%</div>
+                            <div class="w-full max-w-[45px] bg-indigo-500 rounded-t-lg chart-bar relative shadow-lg shadow-indigo-500/20" style="height: 0%;" data-height="82%"></div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase mt-3 group-hover:text-indigo-600">DIB5A</div>
+                        </div>
+
+                        <!-- DIB6A (85%) -->
+                        <div class="group h-full flex flex-col justify-end items-center w-full cursor-pointer" onclick="showDetails('dib6a')">
+                            <div class="text-xs font-bold text-indigo-600 mb-1 opacity-0 group-hover:opacity-100 transition-opacity -translate-y-2">85%</div>
+                            <div class="w-full max-w-[45px] bg-indigo-500 rounded-t-lg chart-bar relative shadow-lg shadow-indigo-500/20" style="height: 0%;" data-height="85%"></div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase mt-3 group-hover:text-indigo-600">DIB6A</div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Dynamic Details Panel -->
+            <div class="lg:col-span-5 bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm relative overflow-hidden flex flex-col min-h-[400px]">
+                <div class="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                    <i data-lucide="award" class="w-32 h-32 text-slate-900"></i>
+                </div>
+                
+                <!-- Default State -->
+                <div id="default-view" class="h-full flex flex-col justify-center items-center text-center space-y-4 py-8 hidden">
+                    <div class="p-4 bg-blue-50 text-blue-600 rounded-full">
+                        <i data-lucide="mouse-pointer-click" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800" data-key="select_cohort">Pilih Satu Kohort</h3>
+                    <p class="text-sm text-slate-500 max-w-xs" data-key="click_bar_instruction">Klik pada mana-mana bar dalam carta untuk melihat analisis PNM dan prestasi pelajar secara terperinci.</p>
+                </div>
+
+                <!-- Dynamic Content Container -->
+                <div id="detail-view" class="h-full flex flex-col card-enter">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <span id="detail-badge" class="px-2 py-1 text-[10px] font-bold uppercase rounded bg-blue-100 text-blue-700">DIF1A</span>
+                            <h2 id="detail-title" class="text-3xl font-black text-slate-800 mt-2">DIF1A</h2>
+                            <p id="detail-desc" class="text-xs text-slate-500">Kohort Semester 1</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase" data-key="plo_score_label">Skor PLO</p>
+                            <p id="detail-score" class="text-3xl font-black text-blue-600">85%</p>
+                        </div>
+                    </div>
+
+                    <!-- GPA Grid -->
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase" data-key="highest_gpa_label">PNM Tertinggi</p>
+                            <p id="detail-high" class="text-xl font-bold text-emerald-600">4.00</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase" data-key="lowest_pnm_label">PNM Terendah</p>
+                            <p id="detail-low" class="text-xl font-bold text-red-500">3.14</p>
+                        </div>
+                    </div>
+
+                    <!-- Achievement Bar -->
+                    <div class="bg-slate-900 text-white p-5 rounded-2xl mt-auto shadow-xl">
+                        <div class="flex justify-between items-end mb-2">
+                            <p class="text-xs font-bold text-slate-400 uppercase" data-key="students_above_3">Pelajar dengan PNM > 3.00</p>
+                            <p id="detail-rate" class="text-2xl font-bold text-emerald-400">100%</p>
+                        </div>
+                        <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                            <div id="detail-bar" class="bg-emerald-400 h-full transition-all duration-1000" style="width: 100%"></div>
+                        </div>
+                        <p id="detail-count" class="text-[10px] text-slate-400 mt-2 text-right">25/25 <span data-key="students_label">Pelajar</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed CLO Analysis -->
+        <section class="grid lg:grid-cols-12 gap-8">
+            
+            <!-- List of Courses < 70% -->
+            <div class="lg:col-span-8 bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="bg-red-100 p-2 rounded-lg text-red-600">
+                        <i data-lucide="alert-octagon" class="w-5 h-5"></i>
+                    </div>
+                    <h2 class="text-xl font-extrabold text-slate-800" data-key="critical_inventory_title">Inventori Kursus Kritikal (CLO < 70%)</h2>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-[10px] uppercase font-bold text-slate-400">
+                                <th class="pb-3 pl-2" data-key="course_code_th">Kod Kursus</th>
+                                <th class="pb-3" data-key="course_name_th">Nama Kursus</th>
+                                <th class="pb-3 text-center" data-key="score_th">Skor</th>
+                                <th class="pb-3 text-center" data-key="failed_plo_th">PLO Terjejas</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            <!-- PLO1 Group -->
+                            <tr class="hover:bg-slate-50/50">
+                                <td class="py-3 pl-2 font-bold text-slate-700">DPD10033</td>
+                                <td class="py-3 text-slate-600">Fiqh Muamalat</td>
+                                <td class="py-3 text-center font-bold text-orange-500">65%</td>
+                                <td class="py-3 text-center"><span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">PLO1</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/50">
+                                <td class="py-3 pl-2 font-bold text-slate-700">DPD20073</td>
+                                <td class="py-3 text-slate-600">Islamic Jurisprudence</td>
+                                <td class="py-3 text-center font-bold text-orange-500">60%</td>
+                                <td class="py-3 text-center"><span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">PLO1</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/50">
+                                <td class="py-3 pl-2 font-bold text-slate-700">DPD20083</td>
+                                <td class="py-3 text-slate-600">Islamic Financial System</td>
+                                <td class="py-3 text-center font-bold text-orange-500">64%</td>
+                                <td class="py-3 text-center"><span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">PLO1</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/50">
+                                <td class="py-3 pl-2 font-bold text-slate-700">DPD30093</td>
+                                <td class="py-3 text-slate-600">IFS, Legal & Gov Framework</td>
+                                <td class="py-3 text-center font-bold text-yellow-500">68%</td>
+                                <td class="py-3 text-center"><span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">PLO1</span></td>
+                            </tr>
+                            <!-- PLO2 Group -->
+                            <tr class="hover:bg-slate-50/50">
+                                <td class="py-3 pl-2 font-bold text-slate-700">DPD40153</td>
+                                <td class="py-3 text-slate-600">Financial Management</td>
+                                <td class="py-3 text-center font-bold text-red-500">53%</td>
+                                <td class="py-3 text-center"><span class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] font-bold">PLO2</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/50">
+                                <td class="py-3 pl-2 font-bold text-slate-700">DPD40183</td>
+                                <td class="py-3 text-slate-600">Takaful</td>
+                                <td class="py-3 text-center font-bold text-red-500">54%</td>
+                                <td class="py-3 text-center"><span class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] font-bold">PLO2</span></td>
+                            </tr>
+                            <!-- Critical Fail -->
+                            <tr class="bg-red-50/30">
+                                <td class="py-3 pl-2 font-bold text-red-700">DPD40163</td>
+                                <td class="py-3 text-red-800 font-bold">Corp Finance (Islamic)</td>
+                                <td class="py-3 text-center font-black text-red-600">45%</td>
+                                <td class="py-3 text-center"><span class="bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] font-bold">PLO7</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PLO Vulnerability Analysis -->
+            <div class="lg:col-span-4 bg-slate-900 text-white p-8 rounded-[2rem] shadow-xl flex flex-col justify-center">
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-white" data-key="plo_vulnerability_title">Indeks Kerentanan PLO</h3>
+                    <p class="text-xs text-slate-400 mt-1" data-key="plo_vulnerability_subtitle">Domain pembelajaran manakah yang paling kerap gagal?</p>
+                </div>
+
+                <div class="space-y-5">
+                    <!-- PLO1 Analysis -->
+                    <div>
+                        <div class="flex justify-between text-xs font-bold mb-2">
+                            <span class="text-slate-300" data-key="plo1_label">PLO1: Pengetahuan & Teori</span>
+                            <span class="text-orange-400" data-key="affected_courses_6">6 Kursus Terjejas</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-2">
+                            <div class="bg-orange-400 h-2 rounded-full" style="width: 60%"></div>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1 italic" data-key="plo1_desc">Kekerapan kegagalan tertinggi. Menunjukkan pengekalan konsep asas Syariah yang lemah.</p>
+                    </div>
+
+                    <!-- PLO2 Analysis -->
+                    <div>
+                        <div class="flex justify-between text-xs font-bold mb-2">
+                            <span class="text-slate-300" data-key="plo2_label">PLO2: Kemahiran Kognitif</span>
+                            <span class="text-blue-400" data-key="affected_courses_4">4 Kursus Terjejas</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-2">
+                            <div class="bg-blue-400 h-2 rounded-full" style="width: 40%"></div>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1 italic" data-key="plo2_desc">Pelajar sukar mengaplikasikan teori kepada senario kompleks (cth: Takaful, Pengurusan Kewangan).</p>
+                    </div>
+
+                     <!-- PLO7 Analysis -->
+                     <div>
+                        <div class="flex justify-between text-xs font-bold mb-2">
+                            <span class="text-slate-300" data-key="plo7_label">PLO7: Numerasi</span>
+                            <span class="text-red-500" data-key="critical_fail_count">1 Gagal Kritikal (45%)</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-2">
+                            <div class="bg-red-500 h-2 rounded-full" style="width: 15%"></div>
+                        </div>
+                         <p class="text-[10px] text-slate-500 mt-1 italic" data-key="plo7_desc">Skor terendah mutlak direkodkan. Spesifik kepada Corporate Finance.</p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+         <!-- Course Failure Analysis -->
+        <section class="bg-red-50 border border-red-100 rounded-[2rem] p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="bg-red-500 p-2 rounded-lg text-white">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-extrabold text-red-900" data-key="course_failure_title">Analisis Kegagalan Kursus</h2>
+                    <p class="text-xs text-red-600 font-medium mt-1" data-key="course_failure_subtitle">3 Kursus dikesan dengan pelajar mengulang ("Mengulang Kursus")</p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Course 1 -->
+                <div class="bg-white p-6 rounded-2xl border-l-4 border-l-red-500 shadow-sm">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded">DIF1A</span>
+                        <span class="text-xs font-bold text-red-600">1 <span data-key="student_label">Pelajar</span></span>
+                    </div>
+                    <h4 class="font-bold text-slate-900 leading-tight mb-3">DPD10033 Fiqh Muamalat</h4>
+                    <div class="space-y-2">
+                        <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider" data-key="plo_affected_label">PLO Terjejas:</p>
+                        <div class="flex items-center gap-2">
+                            <span class="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded" data-key="plo1_short">PLO1: Pengetahuan</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 italic mt-2" data-key="c1_fail_desc">Prestasi CLO1 adalah 65% (<70%), menunjukkan kelemahan asas.</p>
+                    </div>
+                </div>
+
+                <!-- Course 2 -->
+                <div class="bg-white p-6 rounded-2xl border-l-4 border-l-red-500 shadow-sm">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded">DIF2A</span>
+                        <span class="text-xs font-bold text-red-600">1 <span data-key="student_label">Pelajar</span></span>
+                    </div>
+                    <h4 class="font-bold text-slate-900 leading-tight mb-3">DPD20073 Islamic Jurisprudence</h4>
+                    <div class="space-y-2">
+                        <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider" data-key="plo_affected_label">PLO Terjejas:</p>
+                        <div class="flex items-center gap-2">
+                            <span class="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded" data-key="plo1_short">PLO1: Pengetahuan</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 italic mt-2" data-key="c2_fail_desc">Prestasi CLO1 adalah 60%, mengesahkan isu berterusan dari Fiqh Muamalat.</p>
+                    </div>
+                </div>
+
+                <!-- Course 3 -->
+                <div class="bg-white p-6 rounded-2xl border-l-4 border-l-red-500 shadow-sm">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded">DIF4A</span>
+                        <span class="text-xs font-bold text-red-600">1 <span data-key="student_label">Pelajar</span></span>
+                    </div>
+                    <h4 class="font-bold text-slate-900 leading-tight mb-3">DPD40163 Corporate Finance</h4>
+                    <div class="space-y-2">
+                        <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider" data-key="plo_affected_label">PLO Terjejas:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-1 rounded">PLO7 (45%)</span>
+                            <span class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-1 rounded">PLO8 (54%)</span>
+                            <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded">PLO2 (53%)</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 italic mt-2" data-key="c3_fail_desc">Kegagalan kritikal merentasi domain Numerasi, Kepimpinan & Analisis.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final Strategic Analysis -->
+        <section class="bg-indigo-50 border border-indigo-100 rounded-[2rem] p-8 shadow-sm">
+             <div class="flex items-center gap-3 mb-6">
+                <div class="bg-indigo-600 p-2 rounded-lg text-white">
+                    <i data-lucide="brain-circuit" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-extrabold text-indigo-900" data-key="strategic_focus_title">Fokus Strategik: Peningkatan PLO Berasaskan Penilaian</h2>
+                    <p class="text-xs text-indigo-600 font-medium mt-1" data-key="strategic_focus_subtitle">Menyasarkan peningkatan dalam Teori (PLO1) dan Aplikasi Kognitif (PLO2)</p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- PLO1 Strategy -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm space-y-4">
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-bold text-slate-800" data-key="plo1_label">PLO1: Pengetahuan & Teori</h4>
+                        <span class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-1 rounded" data-key="foundational_badge">Asas</span>
+                    </div>
+                    <div class="text-xs text-slate-600 space-y-2">
+                         <p><strong data-key="affected_assessments_label">Penilaian Terjejas:</strong> <span data-key="affected_assessments_plo1">Kuiz, Peperiksaan Akhir (Bahagian A/MCQ)</span></p>
+                         <p class="leading-relaxed"><strong data-key="analysis_label">Analisis:</strong> <span data-key="analysis_plo1">Kegagalan dalam Fiqh Muamalat (65%) dan Jurisprudence (60%) berpunca daripada pengekalan definisi yang lemah. Pelajar sekadar "menghafal" tanpa memahami <em>'Illah</em> (sebab hukum).</span></p>
+                    </div>
+                    <div class="bg-orange-50 p-3 rounded-xl border border-orange-100">
+                        <p class="text-[10px] font-bold text-orange-800 uppercase mb-1" data-key="action_plan_label">Pelan Tindakan:</p>
+                        <ul class="list-disc pl-4 text-[11px] text-slate-600 space-y-1">
+                            <li data-key="action_plo1_1"><strong>Kuiz Pembacaan Pra-Kelas:</strong> Mewajibkan pembacaan sebelum kuliah untuk memastikan Kuiz menguji kefahaman, bukan sekadar hafalan.</li>
+                            <li data-key="action_plo1_2"><strong>"Latih Tubi Definisi":</strong> Latihan ringkas dan kerap bagi istilah utama (cth: <em>Gharar</em>, <em>Riba</em>) untuk memastikan markah mudah dalam Bahagian A Peperiksaan Akhir.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- PLO2 Strategy -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm space-y-4">
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-bold text-slate-800" data-key="plo2_label">PLO2: Kemahiran Kognitif</h4>
+                        <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded" data-key="application_badge">Aplikasi</span>
+                    </div>
+                    <div class="text-xs text-slate-600 space-y-2">
+                         <p><strong data-key="affected_assessments_label">Penilaian Terjejas:</strong> <span data-key="affected_assessments_plo2">Ujian (Berstruktur), Peperiksaan Akhir (Esei/Pengiraan)</span></p>
+                         <p class="leading-relaxed"><strong data-key="analysis_label">Analisis:</strong> <span data-key="analysis_plo2">Skor rendah dalam Takaful (54%) dan Peng. Kewangan (53%) menunjukkan ketidakupayaan mengaplikasi formula atau konsep kepada senario baharu. Pelajar buntu apabila format soalan berubah.</span></p>
+                    </div>
+                    <div class="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                        <p class="text-[10px] font-bold text-blue-800 uppercase mb-1" data-key="action_plan_label">Pelan Tindakan:</p>
+                        <ul class="list-disc pl-4 text-[11px] text-slate-600 space-y-1">
+                            <li data-key="action_plo2_1"><strong>Ujian Berperingkat (Scaffolded):</strong> Struktur Ujian yang mempunyai kesukaran progresif (Ingatan -> Aplikasi -> Analisis).</li>
+                            <li data-key="action_plo2_2"><strong>Pemarkahan Berasaskan Proses:</strong> Dalam tutorial, berikan markah untuk "langkah kerja" dan bukan hanya jawapan akhir untuk menggalakkan aliran logik dalam soalan esei.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Improvement Plans -->
+        <section class="space-y-6">
+            <div class="flex items-center gap-3 mb-4">
+                <i data-lucide="clipboard-list" class="w-6 h-6 text-slate-800"></i>
+                <h2 class="text-2xl font-bold text-slate-800" data-key="course_improvement_plan_title">Pelan Penambahbaikan Kursus</h2>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- DPD40163: The Critical One -->
+                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm border-l-8 border-l-red-500">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-[10px] font-bold bg-red-100 text-red-600 px-2 py-1 rounded uppercase" data-key="priority_high">Keutamaan: Tinggi</span>
+                        <span class="text-xs font-bold text-slate-400">DIF4A</span>
+                    </div>
+                    <h4 class="font-bold text-slate-900 mb-1">DPD40163 Corporate Finance</h4>
+                    <p class="text-xs text-slate-500 italic mb-4" data-key="fail_plo7_desc">PLO7 (Numerasi) Gagal pada 45%</p>
+                    <div class="space-y-3">
+                        <div class="flex gap-3 items-start">
+                            <div class="w-1 h-1 bg-red-500 rounded-full mt-1.5"></div>
+                            <p class="text-xs text-slate-600" data-key="dpd40163_action"><strong>Klinik Penilaian:</strong> Latihan wajib berulang memfokuskan aktiviti pengiraan dan analisis nisbah.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DPD10033: Foundation -->
+                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm border-l-8 border-l-orange-400">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-[10px] font-bold bg-orange-100 text-orange-600 px-2 py-1 rounded uppercase" data-key="foundational_badge">Asas</span>
+                        <span class="text-xs font-bold text-slate-400">DIF1A</span>
+                    </div>
+                    <h4 class="font-bold text-slate-900 mb-1">DPD10033 Fiqh Muamalat</h4>
+                    <p class="text-xs text-slate-500 italic mb-4" data-key="fail_clo1_desc">CLO1 (Pengetahuan) pada 65%</p>
+                    <div class="space-y-3">
+                        <div class="flex gap-3 items-start">
+                            <div class="w-1 h-1 bg-orange-400 rounded-full mt-1.5"></div>
+                            <p class="text-xs text-slate-600" data-key="dpd10033_action1"><strong>Pemetaan Visual:</strong> Cipta infografik untuk kontrak Syariah (Mudharabah vs Musyarakah).</p>
+                        </div>
+                        <div class="flex gap-3 items-start">
+                            <div class="w-1 h-1 bg-orange-400 rounded-full mt-1.5"></div>
+                            <p class="text-xs text-slate-600" data-key="dpd10033_action2"><strong>Pementoran Rakan Sebaya:</strong> Lantik pelajar DIF3A sebagai mentor.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DPD40183: Cognitive -->
+                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm border-l-8 border-l-blue-400">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-[10px] font-bold bg-blue-100 text-blue-600 px-2 py-1 rounded uppercase" data-key="cognitive_badge">Kognitif</span>
+                        <span class="text-xs font-bold text-slate-400">DIF4A</span>
+                    </div>
+                    <h4 class="font-bold text-slate-900 mb-1">DPD40183 Takaful</h4>
+                    <p class="text-xs text-slate-500 italic mb-4" data-key="fail_plo2_desc">PLO2 (Analisis) pada 54%</p>
+                    <div class="space-y-3">
+                        <div class="flex gap-3 items-start">
+                            <div class="w-1 h-1 bg-blue-400 rounded-full mt-1.5"></div>
+                            <p class="text-xs text-slate-600" data-key="dpd40183_action"><strong>Pra-Ujian:</strong> Memastikan pelajar bersedia untuk melaksanakan penilaian sebelum menduduki ujian sebenar.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                 <!-- DIB6A: Graduation -->
+                 <div class="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-sm text-white">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-[10px] font-bold bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded uppercase" data-key="graduation_badge">Graduasi</span>
+                        <span class="text-xs font-bold text-slate-400">DIB6A</span>
+                    </div>
+                    <h4 class="font-bold text-white mb-1" data-key="li_title">Latihan Industri (LI)</h4>
+                    <p class="text-xs text-slate-400 italic mb-4" data-key="li_subtitle">Kohort Tamat (Silibus Lama)</p>
+                    <div class="space-y-3">
+                        <div class="flex gap-3 items-start">
+                            <div class="w-1 h-1 bg-emerald-400 rounded-full mt-1.5"></div>
+                            <p class="text-xs text-slate-300" data-key="li_status"><strong>Status:</strong> 8/10 Lulus. 2 sedang melengkapkan PKLI menjelang 09 Jan 2025.</p>
+                        </div>
+                         <div class="flex gap-3 items-start">
+                            <div class="w-1 h-1 bg-emerald-400 rounded-full mt-1.5"></div>
+                            <p class="text-xs text-slate-300" data-key="li_achievement"><strong>Pencapaian:</strong> 87.5% mencapai PNM > 3.00.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- TRANSLATION DATA ---
+        const translations = {
+            en: {
+                title: "PORR Report Summary",
+                subtitle: "DIB/DIF Programme | Session I 2025/2026",
+                dif_label: "DIF (New)",
+                dib_label: "DIB (Legacy)",
+                total_students: "Total Students",
+                avg_plo: "Avg PLO Score",
+                avg_pnm: "Avg GPA > 3.00",
+                fail_rate: "Fail Rate",
+                plo_attainment_title: "PLO Attainment by Class",
+                plo_attainment_subtitle: "Click on a bar to view detailed academic performance.",
+                target: "Target",
+                pass: "Pass",
+                select_cohort: "Select a Cohort",
+                click_bar_instruction: "Click on any bar in the chart to view detailed GPA (PNM) analysis and student performance metrics.",
+                plo_score_label: "PLO Score",
+                highest_gpa_label: "Highest GPA",
+                lowest_pnm_label: "Lowest GPA",
+                students_above_3: "Students with GPA > 3.00",
+                students_label: "Students",
+                critical_inventory_title: "Critical Course Inventory (CLO < 70%)",
+                course_code_th: "Course Code",
+                course_name_th: "Course Name",
+                score_th: "Score",
+                failed_plo_th: "Failed PLO",
+                plo_vulnerability_title: "PLO Vulnerability Index",
+                plo_vulnerability_subtitle: "Which learning domains are failing most often?",
+                plo1_label: "PLO1: Knowledge & Theory",
+                affected_courses_6: "6 Courses Affected",
+                plo1_desc: "Highest frequency failure. Indicates poor retention of foundational Shariah concepts.",
+                plo2_label: "PLO2: Cognitive Skills",
+                affected_courses_4: "4 Courses Affected",
+                plo2_desc: "Students struggle to apply theory to complex scenarios (e.g., Takaful, Financial Mgmt).",
+                plo7_label: "PLO7: Numeracy",
+                critical_fail_count: "1 Critical Fail (45%)",
+                plo7_desc: "Lowest absolute score recorded. Specific to Corporate Finance.",
+                course_failure_title: "Course Failure Analysis",
+                course_failure_subtitle: "3 Courses detected with repeating students (\"Repeating Course\")",
+                student_label: "Student",
+                plo_affected_label: "Affected PLO:",
+                plo1_short: "PLO1: Knowledge",
+                c1_fail_desc: "CLO1 performance is 65% (<70%), indicating foundational weakness.",
+                c2_fail_desc: "CLO1 performance is 60%, confirming a carry-over issue from Fiqh Muamalat.",
+                c3_fail_desc: "Critical failure across Numeracy, Leadership & Analysis domains.",
+                strategic_focus_title: "Strategic Focus: Assessment-Based PLO Enhancement",
+                strategic_focus_subtitle: "Targeting improvement in Theory (PLO1) and Cognitive Application (PLO2)",
+                foundational_badge: "Foundational",
+                affected_assessments_label: "Affected Assessments:",
+                affected_assessments_plo1: "Quizzes, Final Exam (Part A/MCQ)",
+                analysis_label: "Analysis:",
+                analysis_plo1: "Failures in Fiqh Muamalat (65%) and Jurisprudence (60%) stem from poor retention of definitions. Students are 'memorizing' without understanding the 'Illah (legal reasoning).",
+                action_plan_label: "Action Plan:",
+                action_plo1_1: "<strong>Pre-Class Reading Quizzes:</strong> Enforce reading before lectures to ensure Quizzes are not just memory tests but comprehension checks.",
+                action_plo1_2: "<strong>'Definition Drills':</strong> Short, frequent drills on key terms (e.g., Gharar, Riba) to secure easy marks in Final Exam Part A.",
+                application_badge: "Application",
+                affected_assessments_plo2: "Tests (Structured), Final Exam (Essay/Calculation)",
+                analysis_plo2: "Low scores in Takaful (54%) and Fin. Mgmt (53%) indicate inability to apply formulas or concepts to new scenarios. Students struggle when question formats change.",
+                action_plo2_1: "<strong>Scaffolded Tests:</strong> Structure Tests to have progressive difficulty (Recall -> Application -> Analysis).",
+                action_plo2_2: "<strong>Process-Based Marking:</strong> In tutorials, award marks for the 'working steps' rather than just the final answer to encourage logical flow in essay questions.",
+                course_improvement_plan_title: "Course Improvement Plan",
+                priority_high: "Priority: High",
+                fail_plo7_desc: "PLO7 (Numeracy) Failed at 45%",
+                dpd40163_action: "<strong>Assessment Clinic:</strong> Mandatory repetitive drills focusing on calculation activities and ratio analysis.",
+                fail_clo1_desc: "CLO1 (Knowledge) at 65%",
+                dpd10033_action1: "<strong>Visual Mapping:</strong> Create infographics for Shariah contracts (Mudharabah vs Musyarakah).",
+                dpd10033_action2: "<strong>Peer Mentoring:</strong> Assign DIF3A students as mentors.",
+                cognitive_badge: "Cognitive",
+                fail_plo2_desc: "PLO2 (Analysis) at 54%",
+                dpd40183_action: "<strong>Pre-Test:</strong> Ensure students are ready to perform the assessment before taking the actual test.",
+                graduation_badge: "Graduation",
+                li_title: "Industrial Training (LI)",
+                li_subtitle: "Exit Cohort (Legacy Syllabus)",
+                li_status: "<strong>Status:</strong> 8/10 Passed. 2 completing PKLI by 09 Jan 2025.",
+                li_achievement: "<strong>Achievement:</strong> 87.5% achieved GPA > 3.00.",
+                cohort_1_desc: "Semester 1 Cohort",
+                cohort_2_desc: "Semester 2 Cohort",
+                cohort_3_desc: "Semester 3 Cohort",
+                cohort_4_desc: "Semester 4 Cohort",
+                cohort_5_desc: "Semester 5 Cohort",
+                cohort_6_desc: "Semester 6 Cohort"
+            },
+            ms: {
+                title: "Ringkasan Laporan PORR",
+                subtitle: "Program DIB/DIF | Sesi I 2025/2026",
+                dif_label: "DIF (Baharu)",
+                dib_label: "DIB (Lama)",
+                total_students: "Jumlah Pelajar",
+                avg_plo: "Purata Skor PLO",
+                avg_pnm: "Purata PNM > 3.00",
+                fail_rate: "Kadar Gagal",
+                plo_attainment_title: "Pencapaian PLO Mengikut Kelas",
+                plo_attainment_subtitle: "Klik pada bar untuk melihat analisis prestasi akademik terperinci.",
+                target: "Sasaran",
+                pass: "Lulus",
+                select_cohort: "Pilih Satu Kohort",
+                click_bar_instruction: "Klik pada mana-mana bar dalam carta untuk melihat analisis PNM dan prestasi pelajar secara terperinci.",
+                plo_score_label: "Skor PLO",
+                highest_gpa_label: "PNM Tertinggi",
+                lowest_pnm_label: "PNM Terendah",
+                students_above_3: "Pelajar dengan PNM > 3.00",
+                students_label: "Pelajar",
+                critical_inventory_title: "Inventori Kursus Kritikal (CLO < 70%)",
+                course_code_th: "Kod Kursus",
+                course_name_th: "Nama Kursus",
+                score_th: "Skor",
+                failed_plo_th: "PLO Terjejas",
+                plo_vulnerability_title: "Indeks Kerentanan PLO",
+                plo_vulnerability_subtitle: "Domain pembelajaran manakah yang paling kerap gagal?",
+                plo1_label: "PLO1: Pengetahuan & Teori",
+                affected_courses_6: "6 Kursus Terjejas",
+                plo1_desc: "Kekerapan kegagalan tertinggi. Menunjukkan pengekalan konsep asas Syariah yang lemah.",
+                plo2_label: "PLO2: Kemahiran Kognitif",
+                affected_courses_4: "4 Kursus Terjejas",
+                plo2_desc: "Pelajar sukar mengaplikasikan teori kepada senario kompleks (cth: Takaful, Pengurusan Kewangan).",
+                plo7_label: "PLO7: Numerasi",
+                critical_fail_count: "1 Gagal Kritikal (45%)",
+                plo7_desc: "Skor terendah mutlak direkodkan. Spesifik kepada Corporate Finance.",
+                course_failure_title: "Analisis Kegagalan Kursus",
+                course_failure_subtitle: "3 Kursus dikesan dengan pelajar mengulang (\"Mengulang Kursus\")",
+                student_label: "Pelajar",
+                plo_affected_label: "PLO Terjejas:",
+                plo1_short: "PLO1: Pengetahuan",
+                c1_fail_desc: "Prestasi CLO1 adalah 65% (<70%), menunjukkan kelemahan asas.",
+                c2_fail_desc: "Prestasi CLO1 adalah 60%, mengesahkan isu berterusan dari Fiqh Muamalat.",
+                c3_fail_desc: "Kegagalan kritikal merentasi domain Numerasi, Kepimpinan & Analisis.",
+                strategic_focus_title: "Fokus Strategik: Peningkatan PLO Berasaskan Penilaian",
+                strategic_focus_subtitle: "Menyasarkan peningkatan dalam Teori (PLO1) dan Aplikasi Kognitif (PLO2)",
+                foundational_badge: "Asas",
+                affected_assessments_label: "Penilaian Terjejas:",
+                affected_assessments_plo1: "Kuiz, Peperiksaan Akhir (Bahagian A/MCQ)",
+                analysis_label: "Analisis:",
+                analysis_plo1: "Kegagalan dalam Fiqh Muamalat (65%) dan Jurisprudence (60%) berpunca daripada pengekalan definisi yang lemah. Pelajar sekadar \"menghafal\" tanpa memahami <em>'Illah</em> (sebab hukum).",
+                action_plan_label: "Pelan Tindakan:",
+                action_plo1_1: "<strong>Kuiz Pembacaan Pra-Kelas:</strong> Mewajibkan pembacaan sebelum kuliah untuk memastikan Kuiz menguji kefahaman, bukan sekadar hafalan.",
+                action_plo1_2: "<strong>\"Latih Tubi Definisi\":</strong> Latihan ringkas dan kerap bagi istilah utama (cth: <em>Gharar</em>, <em>Riba</em>) untuk memastikan markah mudah dalam Bahagian A Peperiksaan Akhir.",
+                application_badge: "Aplikasi",
+                affected_assessments_plo2: "Ujian (Berstruktur), Peperiksaan Akhir (Esei/Pengiraan)",
+                analysis_plo2: "Skor rendah dalam Takaful (54%) dan Peng. Kewangan (53%) menunjukkan ketidakupayaan mengaplikasi formula atau konsep kepada senario baharu. Pelajar buntu apabila format soalan berubah.",
+                action_plo2_1: "<strong>Ujian Berperingkat (Scaffolded):</strong> Struktur Ujian yang mempunyai kesukaran progresif (Ingatan -> Aplikasi -> Analisis).",
+                action_plo2_2: "<strong>Pemarkahan Berasaskan Proses:</strong> Dalam tutorial, berikan markah untuk \"langkah kerja\" dan bukan hanya jawapan akhir untuk menggalakkan aliran logik dalam soalan esei.",
+                course_improvement_plan_title: "Pelan Penambahbaikan Kursus",
+                priority_high: "Keutamaan: Tinggi",
+                fail_plo7_desc: "PLO7 (Numerasi) Gagal pada 45%",
+                dpd40163_action: "<strong>Klinik Penilaian:</strong> Latihan wajib berulang memfokuskan aktiviti pengiraan dan analisis nisbah.",
+                fail_clo1_desc: "CLO1 (Pengetahuan) pada 65%",
+                dpd10033_action1: "<strong>Pemetaan Visual:</strong> Cipta infografik untuk kontrak Syariah (Mudharabah vs Musyarakah).",
+                dpd10033_action2: "<strong>Pementoran Rakan Sebaya:</strong> Lantik pelajar DIF3A sebagai mentor.",
+                cognitive_badge: "Kognitif",
+                fail_plo2_desc: "PLO2 (Analisis) pada 54%",
+                dpd40183_action: "<strong>Pra-Ujian:</strong> Memastikan pelajar bersedia untuk melaksanakan penilaian sebelum menduduki ujian sebenar.",
+                graduation_badge: "Graduasi",
+                li_title: "Latihan Industri (LI)",
+                li_subtitle: "Kohort Tamat (Silibus Lama)",
+                li_status: "<strong>Status:</strong> 8/10 Lulus. 2 sedang melengkapkan PKLI menjelang 09 Jan 2025.",
+                li_achievement: "<strong>Pencapaian:</strong> 87.5% mencapai PNM > 3.00.",
+                cohort_1_desc: "Kohort Semester 1",
+                cohort_2_desc: "Kohort Semester 2",
+                cohort_3_desc: "Kohort Semester 3",
+                cohort_4_desc: "Kohort Semester 4",
+                cohort_5_desc: "Kohort Semester 5",
+                cohort_6_desc: "Kohort Semester 6"
+            }
+        };
+
+        // Current state
+        let currentLang = 'ms';
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'ms' ? 'en' : 'ms';
+            updateContent();
+        }
+
+        function updateContent() {
+            const t = translations[currentLang];
+            
+            // Update button text
+            document.getElementById('lang-btn-text').innerText = currentLang === 'ms' ? 'English' : 'Bahasa Melayu';
+            
+            // Update document title
+            document.title = t.title;
+
+            // Update all elements with data-key attribute
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if (t[key]) {
+                    el.innerHTML = t[key];
+                }
+            });
+
+            // Update chart labels/descriptions if currently active
+            const activeClassId = document.querySelector('.active-bar')?.closest('.group')?.getAttribute('onclick')?.match(/'([^']+)'/)[1];
+            if (activeClassId) {
+                showDetails(activeClassId);
+            } else {
+                // If nothing active (initial load or cancelled), refresh default view if visible
+                 showDetails('dif4a'); // Re-trigger default
+            }
+        }
+
+        // Data Store (Unified, will pick description based on lang)
+        const classData = {
+            'dif1a': { title: 'DIF1A', score: '85%', high: '4.00', low: '3.14', rate: '100%', count: '25/25', descKey: 'cohort_1_desc' },
+            'dif2a': { title: 'DIF2A', score: '83%', high: '3.79', low: '2.94', rate: '85.7%', count: '6/7', descKey: 'cohort_2_desc' },
+            'dif3a': { title: 'DIF3A', score: '87%', high: '4.00', low: '3.40', rate: '100%', count: '19/19', descKey: 'cohort_3_desc' },
+            'dif4a': { title: 'DIF4A', score: '72%', high: '3.82', low: '2.53', rate: '44.4%', count: '4/9', descKey: 'cohort_4_desc' },
+            'dib5a': { title: 'DIB5A', score: '82%', high: '4.00', low: '2.98', rate: '96%', count: '24/25', descKey: 'cohort_5_desc' },
+            'dib6a': { title: 'DIB6A', score: '85%', high: '4.00', low: '3.40', rate: '87.5%', count: '7/8', descKey: 'cohort_6_desc' }
+        };
+
+        function showDetails(classId) {
+            const data = classData[classId];
+            const t = translations[currentLang];
+            const defaultView = document.getElementById('default-view');
+            const detailView = document.getElementById('detail-view');
+
+            // Hide default, show detail
+            if (defaultView) defaultView.classList.add('hidden');
+            if (detailView) {
+                detailView.classList.remove('hidden');
+                detailView.classList.add('card-enter');
+                
+                // Trigger reflow for animation restart
+                void detailView.offsetWidth;
+            }
+
+            // Populate Data
+            if (document.getElementById('detail-title')) document.getElementById('detail-title').innerText = data.title;
+            if (document.getElementById('detail-badge')) document.getElementById('detail-badge').innerText = data.title;
+            if (document.getElementById('detail-desc')) document.getElementById('detail-desc').innerText = t[data.descKey];
+            if (document.getElementById('detail-score')) document.getElementById('detail-score').innerText = data.score;
+            if (document.getElementById('detail-high')) document.getElementById('detail-high').innerText = data.high;
+            if (document.getElementById('detail-low')) document.getElementById('detail-low').innerText = data.low;
+            if (document.getElementById('detail-rate')) document.getElementById('detail-rate').innerText = data.rate;
+            if (document.getElementById('detail-count')) document.getElementById('detail-count').innerText = data.count + ' ' + t.students_label + ' > 3.00';
+            
+            // Animate Bar for Details
+            const percentage = parseFloat(data.rate);
+            const bar = document.getElementById('detail-bar');
+            if (bar) {
+                bar.style.width = '0%';
+                setTimeout(() => { bar.style.width = percentage + '%'; }, 100);
+            }
+
+            // Color Coding Logic
+            const titleColor = data.title === 'DIF4A' ? 'text-red-600' : 'text-slate-800';
+            if (document.getElementById('detail-title')) document.getElementById('detail-title').className = `text-3xl font-black mt-2 ${titleColor}`;
+            
+            const badgeColor = data.title === 'DIF4A' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700';
+            if (document.getElementById('detail-badge')) document.getElementById('detail-badge').className = `px-2 py-1 text-[10px] font-bold uppercase rounded ${badgeColor}`;
+        }
+
+        // Animate Main Chart on Load
+        function animateChart() {
+            const bars = document.querySelectorAll('.chart-bar');
+            bars.forEach(bar => {
+                const targetHeight = bar.getAttribute('data-height');
+                setTimeout(() => {
+                    bar.style.height = targetHeight;
+                }, 300); // Slight delay for effect
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+             // Initialize Lucide icons
+             if (window.lucide) {
+                lucide.createIcons();
+             }
+             // Animate the bars
+             animateChart();
+             
+             // Auto-select DIF4A on load
+             showDetails('dif4a');
+        });
+    </script>
+</body>
+</html>
