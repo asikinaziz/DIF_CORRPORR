@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Dashboard PORR & CORR</title>
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff; /* Requested White Background */
+            color: #1e293b;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Smooth tab transitions */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Interactive Elements */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+
+        .class-pill {
+            transition: all 0.2s;
+        }
+        .class-pill.active {
+            background-color: #1e40af;
+            color: white;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+            border-color: #1e40af;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+
+        /* Data Table Styling */
+        .data-table th { background-color: #f8fafc; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: #475569;}
+        .data-table td, .data-table th { border-bottom: 1px solid #e2e8f0; padding: 12px 16px; }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table tr:hover { background-color: #f1f5f9; transition: background-color 0.2s; }
+        
+        .pulse-red {
+            animation: pulse-red 2s infinite;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+    </style>
+</head>
+<body class="antialiased h-screen flex flex-col overflow-hidden">
+
+    <!-- App Header -->
+    <header class="bg-white border-b border-gray-200 z-10 flex-shrink-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center py-4 gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-blue-900 flex items-center justify-center text-white shadow-lg">
+                        <i class="fa-solid fa-chart-line text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900 leading-tight">Analisis PORR & CORR Interaktif</h1>
+                        <p class="text-sm text-gray-500 font-medium">Sesi II 2025/2026 • Program DIF & DIB</p>
+                    </div>
+                </div>
+                
+                <!-- Main Navigation Tabs -->
+                <nav class="flex p-1 space-x-1 bg-gray-100 rounded-xl" aria-label="Tabs">
+                    <button onclick="switchTab('overview')" id="tab-overview" class="nav-tab relative px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 text-blue-700 bg-white shadow-sm ring-1 ring-gray-900/5">
+                        <i class="fa-solid fa-gauge-high mr-2"></i>Dashboard
+                    </button>
+                    <button onclick="switchTab('class-analysis')" id="tab-class-analysis" class="nav-tab relative px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                        <i class="fa-solid fa-users mr-2"></i>Analisis Kelas
+                    </button>
+                    <button onclick="switchTab('critical')" id="tab-critical" class="nav-tab relative px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                        <i class="fa-solid fa-triangle-exclamation mr-2 text-red-500"></i>Kritikal (<70%)
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area (Scrollable) -->
+    <main class="flex-1 overflow-y-auto bg-slate-50/50 p-4 sm:p-6 lg:p-8">
+        <div class="max-w-7xl mx-auto">
+
+            <!-- TAB 1: OVERVIEW DASHBOARD -->
+            <div id="view-overview" class="tab-content active space-y-6">
+                
+                <!-- KPI Row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div class="glass-panel p-5 rounded-2xl border-l-4 border-blue-600">
+                        <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Jumlah Pelajar</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-3xl font-black text-gray-900">88</span>
+                            <span class="text-sm font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full"><i class="fa-solid fa-check mr-1"></i>100% Lulus</span>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-5 rounded-2xl border-l-4 border-emerald-500">
+                        <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Pencapaian HPNM >3.0</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-3xl font-black text-gray-900">85</span>
+                            <span class="text-sm text-gray-500 font-medium">/ 88 Pelajar</span>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-5 rounded-2xl border-l-4 border-indigo-500">
+                        <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Pencapaian PNM >3.0</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-3xl font-black text-gray-900">59</span>
+                            <span class="text-sm text-gray-500 font-medium">/ 63 Pelajar</span>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-5 rounded-2xl border-l-4 border-purple-500">
+                        <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Status Mengulang</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-3xl font-black text-gray-900">0</span>
+                            <span class="text-sm text-gray-500 font-medium">Kursus (0.00%)</span>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-5 rounded-2xl border-l-4 border-red-500 cursor-pointer hover:bg-red-50 transition" onclick="switchTab('critical')">
+                        <p class="text-sm font-semibold text-red-600 uppercase tracking-wider mb-1">Kursus Perlu Perhatian</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-3xl font-black text-red-600">10</span>
+                            <span class="text-sm text-red-500 font-medium font-bold pulse-red bg-red-100 px-2 py-0.5 rounded-full">PLO < 70%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Overall PLO -->
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-bold text-gray-800">PLO Group Attainment</h3>
+                            <button onclick="switchTab('class-analysis')" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                                Perincian <i class="fa-solid fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="overviewPloChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- PNM vs HPNM -->
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <h3 class="text-lg font-bold text-gray-800 mb-6">Analisis PNM & HPNM (>3.00)</h3>
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="overviewPnmChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: INTERACTIVE CLASS ANALYSIS -->
+            <div id="view-class-analysis" class="tab-content space-y-6">
+                
+                <!-- Class Selector -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-wrap gap-2 items-center justify-center lg:justify-start">
+                    <span class="text-sm font-bold text-gray-500 mr-2 uppercase tracking-wider hidden md:inline">Pilih Kelas:</span>
+                    <div id="class-selectors" class="flex flex-wrap gap-2">
+                        <!-- Buttons injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Dynamic Class Dashboard -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Left Column: Info & Feedback -->
+                    <div class="space-y-6 lg:col-span-1">
+                        <!-- Class Info Card -->
+                        <div class="glass-panel rounded-2xl overflow-hidden border-t-4 border-blue-600">
+                            <div class="p-5 bg-gradient-to-b from-blue-50 to-white">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h2 id="dy-class-name" class="text-3xl font-black text-gray-900 tracking-tight">DIF1A</h2>
+                                        <p id="dy-class-pa" class="text-sm font-semibold text-blue-700 mt-1">PA: MALISA OTHMAN</p>
+                                    </div>
+                                    <div id="dy-class-alert" class="hidden rounded-full bg-red-100 text-red-600 p-2 pulse-red" title="Mempunyai PLO < 70%">
+                                        <i class="fa-solid fa-triangle-exclamation"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-5 grid grid-cols-2 gap-4 border-t border-gray-100">
+                                <div>
+                                    <p class="text-xs text-gray-500 font-semibold uppercase">Bil Pelajar</p>
+                                    <p id="dy-class-students" class="text-xl font-bold text-gray-800">2</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-semibold uppercase">Lulus</p>
+                                    <p id="dy-class-pass" class="text-xl font-bold text-green-600">2/2 (100%)</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-semibold uppercase">PNM > 3.00</p>
+                                    <p id="dy-class-pnm" class="text-xl font-bold text-gray-800">2/2</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-semibold uppercase">HPNM > 3.00</p>
+                                    <p id="dy-class-hpnm" class="text-xl font-bold text-gray-800">2/2</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Feedback Card -->
+                        <div class="glass-panel rounded-2xl p-5 relative overflow-hidden" id="feedback-container">
+                            <div class="absolute top-0 right-0 p-4 opacity-10 text-blue-900 text-6xl">
+                                <i class="fa-solid fa-comment-dots"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center relative z-10">
+                                <i class="fa-regular fa-clipboard mr-2 text-blue-600"></i> Maklumbalas
+                            </h3>
+                            <ul id="dy-class-feedback" class="space-y-3 text-sm text-gray-700 relative z-10 list-none">
+                                <!-- Injected via JS -->
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Interactive Charts -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="glass-panel p-6 rounded-2xl h-full flex flex-col">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-lg font-bold text-gray-800">Pencapaian PLO Kelas</h3>
+                                <div class="bg-gray-100 p-1 rounded-lg flex space-x-1">
+                                    <button onclick="toggleChartType('bar')" id="btn-chart-bar" class="px-3 py-1.5 text-xs font-bold rounded-md bg-white text-gray-800 shadow-sm transition">Bar Chart</button>
+                                    <button onclick="toggleChartType('radar')" id="btn-chart-radar" class="px-3 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-800 transition">Radar Chart</button>
+                                </div>
+                            </div>
+                            <div class="flex-grow chart-container" style="min-height: 400px;">
+                                <canvas id="dynamicClassChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: CRITICAL ANALYSIS <70% -->
+            <div id="view-critical" class="tab-content space-y-6">
+                
+                <div class="bg-red-50 border border-red-200 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl mr-4 flex-shrink-0">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-red-800">Analisis Kursus Kritikal (< 70%)</h2>
+                            <p class="text-sm text-red-600/80 font-medium mt-1">Interaksi visual bagi kursus yang memerlukan tindakan susulan.</p>
+                        </div>
+                    </div>
+                    <div class="bg-white px-4 py-2 rounded-lg border border-red-100 shadow-sm text-center flex-shrink-0">
+                        <p class="text-xs font-bold text-gray-500 uppercase">Jumlah PLO Terjejas</p>
+                        <p class="text-2xl font-black text-red-600">11</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Data Table -->
+                    <div class="lg:col-span-2 glass-panel rounded-2xl overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left data-table">
+                                <thead>
+                                    <tr>
+                                        <th class="w-1/2">Nama Kursus</th>
+                                        <th>PLO Terlibat</th>
+                                        <th>Pencapaian</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dy-critical-table">
+                                    <!-- Injected via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Action Plan Panel -->
+                    <div class="lg:col-span-1 space-y-6">
+                        <div class="glass-panel p-6 rounded-2xl border-t-4 border-yellow-400 bg-gradient-to-b from-yellow-50/50 to-white">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                                <i class="fa-solid fa-lightbulb text-yellow-500 mr-2"></i> Punca Utama
+                            </h3>
+                            <p class="text-sm text-gray-700 leading-relaxed mb-4">
+                                Kursus dengan pencapaian PLO < 70% majoriti adalah kursus dengan Peperiksaan Akhir (PLO1 & PLO2). Pencapaian rendah berlaku kerana <strong class="bg-yellow-200 px-1 rounded">purata markah Peperiksaan Akhir adalah rendah.</strong>
+                            </p>
+                            
+                            <h3 class="text-lg font-bold text-gray-900 mt-6 mb-3 flex items-center">
+                                <i class="fa-solid fa-list-check text-green-600 mr-2"></i> Tindakan Susulan
+                            </h3>
+                            <ul class="space-y-3">
+                                <li class="flex items-start">
+                                    <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs mt-0.5"><i class="fa-solid fa-check"></i></div>
+                                    <p class="ml-3 text-sm text-gray-700">Melaksanakan latih tubi (teori) berterusan.</p>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs mt-0.5"><i class="fa-solid fa-check"></i></div>
+                                    <p class="ml-3 text-sm text-gray-700">Praktis menjawab set soalan peperiksaan akhir terdahulu.</p>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs mt-0.5"><i class="fa-solid fa-check"></i></div>
+                                    <p class="ml-3 text-sm text-gray-700">Melaksanakan sesi mentoring kritikal ketika <em>Study Week</em> agar pelajar lebih bersedia.</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="mt-12 pt-6 border-t border-gray-200 text-center">
+                <p class="text-xs text-gray-400 font-medium">Analisis Akademik DIF • Politeknik METrO Johor Bahru</p>
+            </footer>
+
+        </div>
+    </main>
+
+    <script>
+        // --- 1. DATA SOURCE (Transformed from static HTML) ---
+        const laporanData = {
+            overview: {
+                overallPLO: [84.8, 84.1, 88.1, 80.3, 83.3, 91.0],
+                classNames: ['DIF1A', 'DIF2A', 'DIF3A', 'DIF4A', 'DIF5A', 'DIB6A'],
+                pnm: [2, 24, 7, 19, 7, 0], // 0 for DIB6A due to LI
+                hpnm: [2, 26, 7, 19, 7, 24]
+            },
+            classes: {
+                "DIF1A": {
+                    pa: "MALISA OTHMAN", students: 2, pnm: "2/2", hpnm: "2/2", pass: "2/2 (100%)",
+                    labels: ['PLO1', 'PLO2', 'PLO3', 'PLO4', 'PLO5', 'PLO6', 'PLO7', 'PLO10', 'PLO11'],
+                    data: [85, 83, 81, 90, 91, 81, 82, 75, 98],
+                    feedback: [
+                        "Kelas mempunyai 2 orang pelajar sahaja",
+                        "2 orang pelajar mencapai PNM dan HPNM >3.00",
+                        "Semua PLO mencapai peratusan > 70%"
+                    ]
+                },
+                "DIF2A": {
+                    pa: "NURSAZLIN RAZALI", students: 26, pnm: "24/26", hpnm: "26/26", pass: "26/26 (100%)",
+                    labels: ['PLO1', 'PLO2', 'PLO3', 'PLO4', 'PLO5', 'PLO6', 'PLO7', 'PLO8', 'PLO9', 'PLO10', 'PLO11'],
+                    data: [76, 70, 75, 93, 89, 93, 89, 88, 76, 50, 93],
+                    feedback: [
+                        "24/26 orang pelajar mencapai PNM >3.00",
+                        "{RED}PLO10 tidak mencapai sasaran 70% (50%)",
+                        "Pencapaian purata melibatkan seorang pelajar mengulang kursus DPD10033 Fiqh Muamalat"
+                    ]
+                },
+                "DIF3A": {
+                    pa: "SITI FAEZAH AHMAD SAZALI", students: 7, pnm: "7/7", hpnm: "7/7", pass: "7/7 (100%)",
+                    labels: ['PLO1', 'PLO2', 'PLO3', 'PLO4', 'PLO5', 'PLO6', 'PLO7', 'PLO8', 'PLO10', 'PLO11'],
+                    data: [72, 74, 96, 77, 92, 94, 82, 91, 92, 86],
+                    feedback: [
+                        "Semua pelajar mencapai PNM >3.00",
+                        "Semua PLO mencapai peratusan > 70%"
+                    ]
+                },
+                "DIF4A": {
+                    pa: "ZARINA YUNUS", students: 19, pnm: "19/19", hpnm: "19/19", pass: "19/19 (100%)",
+                    labels: ['PLO2', 'PLO3', 'PLO4', 'PLO5', 'PLO6', 'PLO7', 'PLO8', 'PLO10'],
+                    data: [78, 87, 79, 86, 92, 62, 56, 91],
+                    feedback: [
+                        "Semua pelajar mencapai PNM >3.00",
+                        "{RED}PLO7 (62%) dan PLO8 (56%) tidak mencapai sasaran 70%",
+                        "Pencapaian purata hanya melibatkan 1 kursus DPD40163 Corporate Finance from Islamic Perspective"
+                    ]
+                },
+                "DIF5A": {
+                    pa: "ELYN MOHD RIDZWAN", students: 9, pnm: "7/9", hpnm: "7/9", pass: "9/9 (100%)",
+                    labels: ['PLO2', 'PLO3', 'PLO5', 'PLO6', 'PLO7', 'PLO8', 'PLO9', 'PLO11'],
+                    data: [64, 85, 84, 81, 56, 70, 89, 94],
+                    feedback: [
+                        "7/9 orang pelajar mencapai PNM >3.00",
+                        "{RED}PLO2 (64%) dan PLO7 (56%) tidak mencapai sasaran 70%",
+                        "Pencapaian rendah PLO2 di dorong oleh pencapaian purata 4 kursus <70% DPD50203, DPD50213, DPD50233, DPD50253",
+                        "Pencapaian rendah PLO7 di dorong oleh pencapaian purata 2 kursus <70% - DPD40163 (mengulang), DPD50223"
+                    ]
+                },
+                "DIB6A": {
+                    pa: "FAEZAH SAHBUDIN", students: 25, pnm: "N/A (Lulus/Gagal)", hpnm: "24/25", pass: "25/25 (100%)",
+                    labels: ['PLO3', 'PLO4', 'PLO5', 'PLO6', 'PLO7', 'PLO8'],
+                    data: [91, 89, 91, 84, 95, 95],
+                    feedback: [
+                        "25 orang pelajar lulus Latihan Industri dan akan bergraduat",
+                        "Tiada PNM bagi sesi semasa kerana status LI ialah Lulus/Gagal",
+                        "Semua PLO (1-8) mencapai peratusan melebihi 70%",
+                        "Batch terakhir menggunakan silibus lama Program DIB"
+                    ]
+                }
+            },
+            critical: [
+                { course: "DPD10033 Fiqh Muamalat", results: [{plo: "PLO3", val: 53, desc:"Practical"}, {plo: "PLO10", val: 50, desc:"Entrepreneur"}] },
+                { course: "DPD20093 Islamic Economics", results: [{plo: "PLO1", val: 67, desc:"Knowledge"}] },
+                { course: "DPD30093 IFS, Legal and Governance Framework", results: [{plo: "PLO2", val: 59, desc:"Cognitive"}] },
+                { course: "DPD40153 Financial Management from Islamic Perspectives", results: [{plo: "PLO1", val: 69, desc:"Knowledge"}] },
+                { course: "DPD40163 Corporate Finance from Islamic Perspectives", results: [{plo: "PLO7", val: 62, desc:"Numeracy"}, {plo: "PLO8", val: 56, desc:"Leadership"}] },
+                { course: "DPD50203 Islamic Legal Maxims", results: [{plo: "PLO2", val: 57, desc:"Cognitive"}] },
+                { course: "DPD50213 Investment from Islamic Perspectives", results: [{plo: "PLO2", val: 59, desc:"Cognitive"}] },
+                { course: "DPD50223 Accounting for Islamic Financial Institutions", results: [{plo: "PLO7", val: 50, desc:"Numeracy"}] },
+                { course: "DPD50233 Credit Analysis and Financing", results: [{plo: "PLO2", val: 67, desc:"Cognitive"}] },
+                { course: "DPD50253 Islamic Bank Management", results: [{plo: "PLO2", val: 60, desc:"Cognitive"}] }
+            ]
+        };
+
+        // --- 2. STATE MANAGEMENT ---
+        let currentTabId = 'overview';
+        let activeClassId = 'DIF1A';
+        let activeChartType = 'bar';
+        let dynamicChartInstance = null;
+
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.9)';
+        Chart.defaults.plugins.tooltip.padding = 12;
+        Chart.defaults.plugins.tooltip.titleFont = { size: 13, weight: 'bold' };
+
+        // --- 3. UI INITIALIZATION & EVENT LISTENERS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initOverviewCharts();
+            buildClassSelector();
+            renderClassData(activeClassId);
+            renderCriticalTable();
+        });
+
+        function switchTab(tabId) {
+            // Update nav buttons
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                btn.classList.remove('text-blue-700', 'bg-white', 'shadow-sm', 'ring-1', 'ring-gray-900/5');
+                btn.classList.add('text-gray-500');
+            });
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.remove('text-gray-500');
+            activeBtn.classList.add('text-blue-700', 'bg-white', 'shadow-sm', 'ring-1', 'ring-gray-900/5');
+
+            // Update content views
+            document.querySelectorAll('.tab-content').forEach(view => {
+                view.classList.remove('active');
+            });
+            document.getElementById(`view-${tabId}`).classList.add('active');
+            currentTabId = tabId;
+        }
+
+        function buildClassSelector() {
+            const container = document.getElementById('class-selectors');
+            laporanData.overview.classNames.forEach(cls => {
+                const btn = document.createElement('button');
+                btn.innerText = cls;
+                btn.className = `class-pill px-4 py-2 rounded-lg text-sm font-bold border ${cls === activeClassId ? 'active' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`;
+                btn.onclick = () => {
+                    document.querySelectorAll('.class-pill').forEach(b => {
+                        b.className = 'class-pill px-4 py-2 rounded-lg text-sm font-bold border bg-white text-gray-600 border-gray-200 hover:bg-gray-50';
+                    });
+                    btn.className = 'class-pill px-4 py-2 rounded-lg text-sm font-bold border active';
+                    renderClassData(cls);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function renderClassData(classId) {
+            activeClassId = classId;
+            const data = laporanData.classes[classId];
+            
+            // Update Text Data
+            document.getElementById('dy-class-name').innerText = classId;
+            document.getElementById('dy-class-pa').innerText = `PA: ${data.pa}`;
+            document.getElementById('dy-class-students').innerText = data.students;
+            document.getElementById('dy-class-pass').innerText = data.pass;
+            document.getElementById('dy-class-pnm').innerText = data.pnm;
+            document.getElementById('dy-class-hpnm').innerText = data.hpnm;
+
+            // Check for warnings (<70%)
+            const hasWarning = data.data.some(val => val < 70);
+            const alertIcon = document.getElementById('dy-class-alert');
+            const feedbackContainer = document.getElementById('feedback-container');
+            
+            if (hasWarning) {
+                alertIcon.classList.remove('hidden');
+                feedbackContainer.classList.add('border-l-4', 'border-red-500');
+            } else {
+                alertIcon.classList.add('hidden');
+                feedbackContainer.classList.remove('border-l-4', 'border-red-500');
+            }
+
+            // Build Feedback List dynamically
+            const feedbackList = document.getElementById('dy-class-feedback');
+            feedbackList.innerHTML = '';
+            data.feedback.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'flex items-start';
+                let content = item;
+                let iconClass = 'fa-solid fa-circle-info text-blue-400 mt-1 mr-2 text-xs';
+                
+                // Parse special {RED} tag
+                if (item.includes('{RED}')) {
+                    content = item.replace('{RED}', '<span class="font-bold text-red-600 bg-red-50 px-1 rounded">');
+                    content += '</span> <span class="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full ml-1 uppercase tracking-wide">Kritikal</span>';
+                    iconClass = 'fa-solid fa-triangle-exclamation text-red-500 mt-1 mr-2 text-xs';
+                }
+
+                li.innerHTML = `<i class="${iconClass}"></i><span>${content}</span>`;
+                feedbackList.appendChild(li);
+            });
+
+            // Update Chart
+            updateDynamicChart(data);
+        }
+
+        function toggleChartType(type) {
+            activeChartType = type;
+            // Update Buttons visually
+            document.getElementById('btn-chart-bar').className = type === 'bar' ? 'px-3 py-1.5 text-xs font-bold rounded-md bg-white text-gray-800 shadow-sm transition' : 'px-3 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-800 transition';
+            document.getElementById('btn-chart-radar').className = type === 'radar' ? 'px-3 py-1.5 text-xs font-bold rounded-md bg-white text-gray-800 shadow-sm transition' : 'px-3 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-800 transition';
+            
+            // Re-render chart with current data
+            updateDynamicChart(laporanData.classes[activeClassId]);
+        }
+
+        function updateDynamicChart(dataObj) {
+            const ctx = document.getElementById('dynamicClassChart');
+            
+            if (dynamicChartInstance) {
+                dynamicChartInstance.destroy();
+            }
+
+            const bgColors = dataObj.data.map(val => val < 70 ? 'rgba(239, 68, 68, 0.8)' : (activeChartType === 'radar' ? 'rgba(59, 130, 246, 0.2)' : '#1e40af'));
+            const borderColors = dataObj.data.map(val => val < 70 ? '#b91c1c' : '#1e3a8a');
+
+            const config = {
+                type: activeChartType,
+                data: {
+                    labels: dataObj.labels,
+                    datasets: [{
+                        label: 'Pencapaian PLO (%)',
+                        data: dataObj.data,
+                        backgroundColor: activeChartType === 'radar' ? 'rgba(59, 130, 246, 0.2)' : bgColors,
+                        borderColor: activeChartType === 'radar' ? '#2563eb' : borderColors,
+                        borderWidth: activeChartType === 'radar' ? 2 : 0,
+                        pointBackgroundColor: activeChartType === 'radar' ? borderColors : undefined,
+                        pointRadius: activeChartType === 'radar' ? 4 : undefined,
+                        borderRadius: activeChartType === 'bar' ? 4 : 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 800, easing: 'easeOutQuart' },
+                    plugins: { legend: { display: false } }
+                }
+            };
+
+            // Custom scales based on chart type
+            if (activeChartType === 'bar') {
+                config.options.scales = {
+                    y: { beginAtZero: true, max: 100, grid: { borderDash: [4, 4] } },
+                    x: { grid: { display: false }, ticks: { font: {weight: 'bold'} } }
+                };
+            } else if (activeChartType === 'radar') {
+                config.options.scales = {
+                    r: { 
+                        angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                        grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                        pointLabels: { font: {size: 12, weight: 'bold'}, color: '#475569' },
+                        ticks: { min: 0, max: 100, stepSize: 20, backdropColor: 'transparent' }
+                    }
+                };
+            }
+
+            dynamicChartInstance = new Chart(ctx, config);
+        }
+
+        function initOverviewCharts() {
+            // Overall Group Chart
+            new Chart(document.getElementById('overviewPloChart'), {
+                type: 'bar',
+                data: {
+                    labels: laporanData.overview.classNames,
+                    datasets: [{
+                        data: laporanData.overview.overallPLO,
+                        backgroundColor: ['#94a3b8', '#94a3b8', '#3b82f6', '#94a3b8', '#94a3b8', '#1e293b'],
+                        borderRadius: 6,
+                        hoverBackgroundColor: '#2563eb'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    onClick: (e, elements) => {
+                        if (elements.length > 0) {
+                            const idx = elements[0].index;
+                            const clickedClass = laporanData.overview.classNames[idx];
+                            // Simulate click on class selector to navigate
+                            switchTab('class-analysis');
+                            // Small timeout to allow tab switch rendering before triggering class render
+                            setTimeout(() => {
+                                const btns = document.querySelectorAll('.class-pill');
+                                btns[idx].click();
+                            }, 50);
+                        }
+                    },
+                    scales: { y: { beginAtZero: true, max: 100 }, x: { grid: { display: false } } },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (ctx) => `Overall: ${ctx.raw}% (Click to view)` } }
+                    }
+                }
+            });
+
+            // PNM / HPNM Chart
+            new Chart(document.getElementById('overviewPnmChart'), {
+                type: 'bar',
+                data: {
+                    labels: laporanData.overview.classNames,
+                    datasets: [
+                        { label: 'PNM >3.00', data: laporanData.overview.pnm, backgroundColor: '#cbd5e1', borderRadius: 4 },
+                        { label: 'HPNM >3.00', data: laporanData.overview.hpnm, backgroundColor: '#475569', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, max: 30 }, x: { grid: { display: false } } },
+                    plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 10, usePointStyle: true } } }
+                }
+            });
+        }
+
+        function renderCriticalTable() {
+            const tbody = document.getElementById('dy-critical-table');
+            
+            laporanData.critical.forEach(row => {
+                row.results.forEach(res => {
+                    const tr = document.createElement('tr');
+                    
+                    // Determine intensity of red based on value
+                    let intensityClass = 'bg-red-50 text-red-600';
+                    let statusLabel = 'Perhatian';
+                    if (res.val < 60) {
+                        intensityClass = 'bg-red-100 text-red-700 font-bold';
+                        statusLabel = 'Kritikal';
+                    }
+
+                    tr.innerHTML = `
+                        <td class="font-medium text-gray-800">${row.course}</td>
+                        <td>
+                            <div class="flex flex-col">
+                                <span class="font-bold text-gray-700">${res.plo}</span>
+                                <span class="text-xs text-gray-400">${res.desc}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm ${intensityClass} border border-red-200">
+                                ${res.val}%
+                            </div>
+                        </td>
+                        <td>
+                            <span class="text-xs font-semibold ${res.val < 60 ? 'text-red-600' : 'text-orange-500'} uppercase tracking-wide">
+                                <i class="fa-solid fa-circle text-[8px] mr-1"></i> ${statusLabel}
+                            </span>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
